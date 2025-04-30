@@ -1,3 +1,5 @@
+import sys
+sys.path.append("./")
 from tokenizer import ValyrianBPETokenizer
 from pathlib import Path
 
@@ -9,7 +11,7 @@ with open(corpus_path, "r", encoding="utf-8") as f:
     corpus = f.read()
 
 # Train BPE Tokenizer
-tokenizer = ValyrianBPETokenizer(vocab_size=100)
+tokenizer = ValyrianBPETokenizer()
 tokenizer.train(corpus)
 
 # Save merges (learned rules)

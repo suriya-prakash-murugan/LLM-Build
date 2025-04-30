@@ -1,0 +1,26 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment folders
+env/
+venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# macOS system files
+.DS_Store
+
+# WandB local run files
+wandb/
+
+# Model checkpoints and outputs
+*.pt
+*.ckpt
+outputs/
+generated_samples/
+
+# Environment variables file
+.env

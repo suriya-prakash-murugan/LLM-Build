@@ -4,10 +4,13 @@ import json
 from pathlib import Path
 
 class ValyrianBPETokenizer:
-    def __init__(self, vocab_size=1000):
-        self.vocab_size = vocab_size
+    def __init__(self):
+        self.vocab_size = 500
         self.vocab = {}
         self.merges = []
+        self.token_to_id = {}
+        self.id_to_token = {}
+
 
     def get_vocab(self, corpus):
         # Split text into words and represent each word as a list of characters + </w>
@@ -46,6 +49,14 @@ class ValyrianBPETokenizer:
             vocab = self.merge_vocab(best, vocab)
             self.merges.append(best)
         self.vocab = vocab
+        # Build final vocab after all merges
+        all_tokens = set()
+        for word_tuple in self.vocab:
+            all_tokens.update(word_tuple)
+
+        self.token_to_id = {token: idx for idx, token in enumerate(sorted(all_tokens))}
+        self.id_to_token = {idx: token for token, idx in self.token_to_id.items()}
+
 
     def encode_word(self, word):
         word = list(word) + ['</w>']
@@ -68,21 +79,30 @@ class ValyrianBPETokenizer:
         return word
     
     def encode(self, text):
-        return [self.encode_word(word) for word in text.strip().split()]
+        encoded_words = [self.encode_word(word) for word in text.strip().split()]
+        # Flatten and map to token IDs
+        token_ids = [self.token_to_id[token] for word in encoded_words for token in word]
+        return token_ids
 
-    def decode(self, tokens):
-        words = []
-        for token_list in tokens:
-            word = ''.join(token_list).replace('</w>', '')
-            words.append(word)
-        return ' '.join(words)
+    def decode(self, token_ids):
+        tokens = [self.id_to_token[i] for i in token_ids]
+        # Reconstruct words from merged tokens
+        text = ''.join(tokens).replace('</w>', ' ')
+        return text.strip()
+
     
     def save(self, path):
         path = Path(path)
         with open(path / 'merges.json', 'w') as f:
             json.dump(self.merges, f)
+        with open(path / 'vocab.json', 'w') as f:
+            json.dump(self.token_to_id, f)
+
 
     def load(self, path):
         path = Path(path)
         with open(path / 'merges.json', 'r') as f:
             self.merges = [tuple(pair) for pair in json.load(f)]
+        with open(path / 'vocab.json', 'r') as f:
+            self.token_to_id = json.load(f)
+            self.id_to_token = {int(v): k for k, v in self.token_to_id.items()}
